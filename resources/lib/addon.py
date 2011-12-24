@@ -234,14 +234,11 @@ def auth():
     GET('http://www.ulitka.tv/component/user/', post)
 
 def addon_main():
-    #if auth some time is lost uncomment next line and comment auth() in another line
-    #Remeber auth() remove all cookies.
-    #auth()
+    auth()
     params = get_params(sys.argv[2])
     try:
         func = params['func']
     except:
-        auth()
         getitems({'url':'http://www.ulitka.tv/xbmc/index.xml'})
         func = None
 
