@@ -8,7 +8,7 @@ import socket, sys
 socket.setdefaulttimeout(15)
 
 h = int(sys.argv[1])
-icon   = xbmc.translatePath(os.path.join(os.getcwd().replace(';', ''),'icon.png'))
+icon   = xbmc.translatePath(os.path.join(os.getcwd().replace(';', ''),'icon.jpg'))
 fanart = xbmc.translatePath(os.path.join(os.getcwd().replace(';', ''),'fanart.jpg'))
 xbmcplugin.setPluginFanart(h, fanart)
 
@@ -81,7 +81,7 @@ def GET(tu, post=None):
         f.close()
         return a
     except Exception, e:
-        print '[%s]: GET EXCEPTION: %s' % (addon_id, e)
+        xbmc.log('[%s]: GET EXCEPTION: %s' % (addon_id, e))
         showMessage(tu, e, 5000)
         return None
 
@@ -212,9 +212,9 @@ def auth():
             cookie_file = os.path.join(cookie_path, cookie_fname)
             try:
                 os.remove(cookie_file)
-            except:
-                print '[%s]: GET EXCEPTION: %s' % (addon_id, e)
-                showMessage(tu, e, 5000)
+            except Exception, e:
+                xbmc.log('[%s]: GET EXCEPTION: %s' % (addon_id, e))
+                showMessage('auth', e, 5000)
 
     token = GET('http://www.ulitka.tv/xbmc/token.php')
 
