@@ -276,11 +276,13 @@ def addon_main():
         func = None
 
     if func != None:
-        try: pfunc = globals()[func]
+        try:
+            pfunc = globals()[func]
         except:
             pfunc = None
             print '[%s]: Function "%s" not found' % (addon_id, func)
             showMessage('Internal addon error', 'Function "%s" not found' % func, 2000)
-        if pfunc: pfunc(params)
+        if pfunc:
+            pfunc(params)
 
 # vim:set tabstop=4 softtabstop=4 shiftwidth=4 expandtab: 
