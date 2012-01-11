@@ -48,14 +48,12 @@ def GET(tu, post=None):
             req = urllib2.Request(tu)
         req.add_header('User-Agent', '%s/%s %s/%s/%s' % (addon_type, addon_id, addon_author, addon_version, urllib.quote_plus(addon_name)))
 
-        #if post:
-            #req.add_header('Content-Type', 'application/x-www-form-urlencoded')
         req.add_header('Authorization', 'Basic %s' % base64.b64encode('%s:%s' % (username, password)))
 
         cookie_path = os.path.join(profile, 'cookie')
         if not os.path.exists(cookie_path):
             os.makedirs(cookie_path)
-            print '[%s]: os.makedirs(cookie_path=%s)' % (addon_id, cookie_path)
+            xbmc.log('[%s]: Make dir for cookies: os.makedirs(cookie_path=%s)' % (addon_id, cookie_path))
 
         cookie_send = {}
         for cookie_fname in os.listdir(cookie_path):
@@ -64,7 +62,8 @@ def GET(tu, post=None):
                 cf = open(cookie_file, 'r')
                 cookie_send[os.path.basename(cookie_file)] = cf.read()
                 cf.close()
-            else: print '[%s]: NOT os.path.isfile(cookie_file=%s)' % (addon_id, cookie_file)
+            else:
+                xbmc.log('[%s]: Cookie file not: os.path.isfile(cookie_file=%s)' % (addon_id, cookie_file))
 
         cookie_string = urllib.urlencode(cookie_send).replace('&','; ')
         req.add_header('Cookie', cookie_string)
@@ -89,52 +88,85 @@ def GET(tu, post=None):
 
 def getitems(params):
     http = GET(params['url'])
-    if http == None: return False
+    if not http:
+        return False
+
     document = xml.dom.minidom.parseString(http)
     for item in document.getElementsByTagName('item'):
         info = {'title': None}
         img  = None
+
         try:
             url = item.getElementsByTagName('url')[0].firstChild.data.encode('utf-8')
-        except: url = None
-        try: info['title'] = item.getElementsByTagName('title')[0].firstChild.data
         except:
-            try: info['title'] = item.getElementsByTagName('label')[0].firstChild.data
-            except: pass
+            url = None
+        try:
+            info['title'] = item.getElementsByTagName('title')[0].firstChild.data
+        except:
+            try:
+                info['title'] = item.getElementsByTagName('label')[0].firstChild.data
+            except:
+                pass
+
         if info['title'] and url:
             IsFolder = False
-            try: IsFolder = (int(item.getElementsByTagName(r'isFolder')[0].firstChild.data) == 1)
-            except: pass
-            try: img = item.getElementsByTagName('thumbnailImage')[0].firstChild.data
+            try:
+                IsFolder = (int(item.getElementsByTagName(r'isFolder')[0].firstChild.data) == 1)
             except:
-                try: img = item.getElementsByTagName('thumbnailImage')[0].firstChild.data
-                except: pass
-            try:    info['plot'] = item.getElementsByTagName('plot')[0].firstChild.data
-            except: pass
-            try:    info['plotoutline'] = item.getElementsByTagName('plotoutline')[0].firstChild.data
-            except: pass
-            try:    info['duration'] = item.getElementsByTagName('duration')[0].firstChild.data
-            except: pass
-            try:    info['tagline'] = item.getElementsByTagName('tagline')[0].firstChild.data
-            except: pass
-            try:    info['genre'] = item.getElementsByTagName('genre')[0].firstChild.data
-            except: pass
-            try:    info['tvshowtitle'] = item.getElementsByTagName('tvshowtitle')[0].firstChild.data
-            except: pass
-            try:    info['season'] = int(item.getElementsByTagName('season')[0].firstChild.data)
-            except: pass
-            try:    info['episode'] = int(item.getElementsByTagName('episode')[0].firstChild.data)
-            except: pass
-            try: vtype = item.getElementsByTagName('type')[0].firstChild.data
-            except: vtype = 'video'
+                pass
+            try:
+                img = item.getElementsByTagName('thumbnailImage')[0].firstChild.data
+            except:
+                try:
+                    img = item.getElementsByTagName('thumbnailImage')[0].firstChild.data
+                except:
+                    pass
+            try:
+                info['plot'] = item.getElementsByTagName('plot')[0].firstChild.data
+            except:
+                pass
+            try:
+                info['plotoutline'] = item.getElementsByTagName('plotoutline')[0].firstChild.data
+            except:
+                pass
+            try:
+                info['duration'] = item.getElementsByTagName('duration')[0].firstChild.data
+            except:
+                pass
+            try:
+                info['tagline'] = item.getElementsByTagName('tagline')[0].firstChild.data
+            except:
+                pass
+            try:
+                info['genre'] = item.getElementsByTagName('genre')[0].firstChild.data
+            except:
+                pass
+            try:
+                info['tvshowtitle'] = item.getElementsByTagName('tvshowtitle')[0].firstChild.data
+            except:
+                pass
+            try:
+                info['season'] = int(item.getElementsByTagName('season')[0].firstChild.data)
+            except:
+                pass
+            try:
+                info['episode'] = int(item.getElementsByTagName('episode')[0].firstChild.data)
+            except:
+                pass
+            try:
+                vtype = item.getElementsByTagName('type')[0].firstChild.data
+            except:
+                vtype = 'video'
             li = xbmcgui.ListItem(info['title'], iconImage = img, thumbnailImage = img)
 
             if IsFolder:
                 uri = '%s?func=getitems&url=%s' % (sys.argv[0], urllib.quote_plus(url))
             else:
                 uri = '%s?func=play&url=%s' % (sys.argv[0], urllib.quote_plus(url))
-                try: uri += '&sub=%s' % urllib.quote_plus(str(item.getElementsByTagName('sub')[0].firstChild.data.encode('utf-8')))
-                except: pass
+                try:
+                    uri += '&sub=%s' % urllib.quote_plus(str(item.getElementsByTagName('sub')[0].firstChild.data.encode('utf-8')))
+                except:
+                    pass
                 li.setProperty('IsPlayable', 'true')
             li.setInfo(type = vtype, infoLabels = info)
             #li.setProperty('fanart_image', ifanart)
@@ -184,7 +216,8 @@ def play(params):
             subf.close()
             xbmc.sleep(2000)
             xbmc.Player().setSubtitles(sf)
-    except: pass
+    except:
+        pass
 
 def get_params(paramstring):
     param=[]
@@ -249,3 +282,5 @@ def addon_main():
             print '[%s]: Function "%s" not found' % (addon_id, func)
             showMessage('Internal addon error', 'Function "%s" not found' % func, 2000)
         if pfunc: pfunc(params)
+
+# vim:set tabstop=4 softtabstop=4 shiftwidth=4 expandtab: 
